@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Thrilia testimony — interview</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg: #f9f7f4;
+            --surface: #ffffff;
+            --card: #ffffff;
+            --border: #e5e0d8;
+            --accent: #0e5b36;
+            --accent2: #1a7a4a;
+            --text: #1a1a1a;
+            --muted: #6b7280;
+            --red: #c0392b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* ── READY SCREEN ── */
+        #ready-screen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+        }
+        #ready-camera-preview {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scaleX(-1);
+        }
+        .ready-overlay {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            text-align: center;
+            padding: 24px;
+        }
+        .ready-logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-shadow: 0 2px 12px rgba(0,0,0,.6);
+        }
+        .ready-logo span { color: #4ade80; }
+        .ready-tagline {
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 400;
+            color: rgba(255,255,255,.9);
+            text-shadow: 0 2px 10px rgba(0,0,0,.5);
+        }
+        .btn-ready-start {
+            background: #0e5b36;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 18px 56px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .05em;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            transition: background .2s, transform .15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-ready-start:hover { background: #1a7a4a; }
+        .btn-ready-start:active { transform: scale(.97); }
+        .btn-ready-start:disabled { opacity: .45; cursor: not-allowed; }
+        .ready-cam-status {
+            color: rgba(255,255,255,.55);
+            font-size: .7rem;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 6px rgba(0,0,0,.5);
+        }
+
+        /* ── ffmpeg loading pill ── */
+        #ffmpeg-pill {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,.55);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-size: .65rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.65);
+            transition: opacity .4s;
+        }
+        #ffmpeg-pill.done { color: #4ade80; border-color: rgba(74,222,128,.25); }
+        #ffmpeg-pill.error { color: #f87171; border-color: rgba(248,113,113,.2); }
+        .pill-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+        .pill-dot.spin {
+            background: none;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .pill-bar-wrap {
+            width: 72px;
+            height: 3px;
+            background: rgba(255,255,255,.15);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #ffmpeg-pill-bar {
+            height: 100%;
+            background: #4ade80;
+            border-radius: 2px;
+            width: 0%;
+            transition: width .3s;
+        }
+
+        /* ── INTERVIEW ── */
+        #interview-screen {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+        .int-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .int-logo {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        .progress-bar-wrap { flex: 1; min-width: 0; margin: 0 10px; }
+        .progress-label {
+            font-size: .58rem;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 2px;
+            transition: width .5s ease;
+            width: 0%;
+        }
+        .rec-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .65rem;
+            color: var(--red);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity .3s;
+            white-space: nowrap;
+        }
+        .rec-badge.active { opacity: 1; }
+        .rec-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse-dot 1s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { opacity:1; transform:scale(1); }
+            50% { opacity:.4; transform:scale(.7); }
+        }
+
+        .video-section {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+        #preview-video { display: none; }
+        #composite-canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .cam-placeholder {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 10px; color: var(--muted);
+            font-size: .78rem; text-align: center; padding: 20px;
+            pointer-events: none;
+        }
+        .cam-placeholder span { font-size: 2rem; }
+
+        .countdown-overlay { position: absolute; top: 12px; right: 12px; z-index: 10; }
+        .countdown-ring { position: relative; width: 64px; height: 64px; }
+        .countdown-ring svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: rgba(255,255,255,.15); stroke-width: 4; }
+        .ring-fill {
+            fill: none; stroke: var(--accent); stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 175; stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        .countdown-num {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 500; color: var(--accent);
+        }
+        .phase-chip {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(0,0,0,.65);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: .62rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); z-index: 10;
+        }
+
+        .controls-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .btn-ctrl {
+            border: none; border-radius: 10px;
+            padding: 13px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: .76rem; font-weight: 500;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            cursor: pointer; transition: all .2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-next {
+            background: var(--accent); color: #fff;
+            flex: 1; min-width: 100px; max-width: 160px;
+        }
+        .btn-next:hover, .btn-next:active { background: #1a7a4a; }
+        .btn-next:disabled { opacity: .3; cursor: not-allowed; }
+        .status-line {
+            text-align: center; font-size: .68rem; color: var(--muted);
+            padding: 6px 16px 10px; background: var(--surface); flex-shrink: 0;
+        }
+
+        /* ── RESULTS ── */
+        #results-screen {
+            display: none;
+            min-height: 100vh;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 32px 16px 48px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(14,91,54,.08) 0%, transparent 60%);
+        }
+        .results-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: clamp(24px, 6vw, 48px);
+            width: 100%; max-width: 700px;
+            text-align: center;
+        }
+        .results-title {
+            font-size: clamp(1.8rem, 6vw, 2.4rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        /* transcode progress */
+        #transcode-status {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        .tc-label {
+            font-size: .68rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 10px;
+        }
+        .tc-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        #tc-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 3px;
+            transition: width .25s ease;
+            width: 0%;
+        }
+        #tc-msg { font-size: .72rem; color: var(--text); }
+
+        #final-download { margin-bottom: 28px; display: none; }
+        .action-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .dl-big {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--accent); color: #fff;
+            border: none; border-radius: 12px;
+            padding: 16px 32px;
+            font-family: 'Inter', sans-serif; font-size: .88rem;
+            font-weight: 500; letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer; text-decoration: none;
+            transition: all .2s; -webkit-tap-highlight-color: transparent;
+        }
+        .dl-big:hover, .dl-big:active { opacity: .9; box-shadow: 0 8px 30px rgba(14,91,54,.25); }
+
+        .btn-restart {
+            background: none; border: 1px solid var(--border); color: var(--muted);
+            border-radius: 8px; padding: 12px 28px;
+            font-family: 'Inter', sans-serif; font-size: .75rem;
+            letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer; transition: all .2s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-restart:hover, .btn-restart:active { border-color: var(--text); color: var(--text); }
+
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .screen-fade { animation: fadeIn .35s ease; }
+
+        @media (min-width: 900px) {
+            .int-header, .controls-panel, .status-line {
+                width: 100%; max-width: 900px; margin: 0 auto;
+            }
+            #interview-screen { align-items: center; }
+            .video-section {
+                width: 100%; max-width: 900px;
+                margin: 18px auto 0;
+                border-radius: 14px; overflow: hidden;
+                max-height: 72vh; flex: none; aspect-ratio: 16/9;
+            }
+            .controls-panel { border-top: none; margin-top: 14px; }
+            .status-line { background: transparent; }
+        }
+        @media (max-width: 480px) {
+            .action-row { flex-direction: column; }
+            .dl-big, .btn-share { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ READY ══════════ -->
+<div id="ready-screen">
+    <video id="ready-camera-preview" autoplay muted playsinline></video>
+    <div class="ready-overlay">
+        <div class="ready-logo">Thrilia <span>testimony</span></div>
+        <p class="ready-tagline">When you are ready…</p>
+        <button class="btn-ready-start" id="btn-ready-start" onclick="beginInterview()" disabled>Start</button>
+        <p class="ready-cam-status" id="ready-cam-status">Requesting camera…</p>
+        <!-- ffmpeg download progress pill -->
+        <!-- <div id="ffmpeg-pill">
+            <div class="pill-dot spin" id="pill-dot"></div>
+            <span id="pill-text">Loading MP4 encoder</span>
+            <div class="pill-bar-wrap"><div id="ffmpeg-pill-bar"></div></div>
+        </div> -->
+    </div>
+</div>
+
+<!-- ══════════ INTERVIEW ══════════ -->
+<div id="interview-screen">
+    <header class="int-header">
+        <span class="int-logo">Thrilia testimony</span>
+        <div class="progress-bar-wrap">
+            <div class="progress-label">
+                <span>Progress</span><span id="prog-text">0 / 3</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+        </div>
+        <div class="rec-badge" id="rec-badge"><div class="rec-dot"></div> REC</div>
+    </header>
+
+    <div class="video-section">
+        <video id="preview-video" autoplay muted playsinline></video>
+        <canvas id="composite-canvas"></canvas>
+        <div class="cam-placeholder" id="cam-placeholder">
+            <span>📷</span>Camera activating…
+        </div>
+        <div class="countdown-overlay" id="countdown-overlay" style="display:none;">
+            <div class="countdown-ring">
+                <svg viewBox="0 0 64 64" width="64" height="64">
+                    <circle class="ring-bg" cx="32" cy="32" r="28"/>
+                    <circle class="ring-fill" id="ring-fill" cx="32" cy="32" r="28"/>
+                </svg>
+                <div class="countdown-num" id="countdown-num">5</div>
+            </div>
+        </div>
+        <div class="phase-chip" id="phase-label">WAITING</div>
+    </div>
+
+    <div class="controls-panel">
+        <button class="btn-ctrl btn-next" id="next-btn" onclick="nextQuestion()" disabled>Next →</button>
+    </div>
+    <div class="status-line" id="status-msg">Question will appear above, then recording starts automatically.</div>
+</div>
+
+<!-- ══════════ RESULTS ══════════ -->
+<div id="results-screen">
+    <div class="results-card screen-fade">
+        <div class="results-title" id="results-title">Testimony Recorded</div>
+
+        <!-- Playback preview: shown immediately with the raw recording, then updated once MP4+music is ready -->
+        <video id="actual-playback" controls playsinline style="width:100%;max-height:60vh;border-radius:10px;background:#000;margin-bottom:24px;display:none;"></video>
+
+        <div id="transcode-status">
+            <div class="tc-label">Adding music &amp; converting to MP4…</div>
+            <div class="tc-track"><div id="tc-fill"></div></div>
+            <div id="tc-msg">Preparing…</div>
+        </div>
+
+        <div id="final-download">
+            <div class="action-row">
+                <a class="dl-big" id="dl-link" href="#" download="thrilia-testimony.mp4">⬇ Download Recording</a>
+            </div>
+        </div>
+
+        <button class="btn-restart" onclick="restartApp()">↺ &nbsp; New Interview</button>
+    </div>
+</div>
+
+<script type="module">
+/* ═══════════════════════════════════════════════════
+   ffmpeg.wasm — loaded eagerly as soon as the page opens.
+   We use v0.12 single-threaded core (no SharedArrayBuffer /
+   COOP-COEP headers needed) so this works in any plain HTML file.
+
+   Two CDNs are tried in order (unpkg first, jsdelivr as fallback) since
+   unpkg occasionally has CORS/availability hiccups for large .wasm assets. */
+
+
+// ── Pill UI helpers ──────────────────────────────────────
+function pillSet(text, pct, state /* 'loading'|'done'|'error' */) {
+    const pill = document.getElementById('ffmpeg-pill');
+    const dot  = document.getElementById('pill-dot');
+    const txt  = document.getElementById('pill-text');
+    const bar  = document.getElementById('ffmpeg-pill-bar');
+    if (!pill) return;
+    txt.textContent = text;
+    bar.style.width = pct + '%';
+    pill.className = state === 'done' ? 'done' : state === 'error' ? 'error' : '';
+    dot.className  = state === 'loading' ? 'pill-dot spin' : 'pill-dot';
+    if (state !== 'loading') {
+        setTimeout(() => { pill.style.opacity = '0'; }, 2200);
+    }
+}
+
+// ── Pre-fetch a URL and report progress via a callback ───
+async function fetchWithProgress(url, onProgress) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
+    const total = parseInt(resp.headers.get('content-length') || '0', 10);
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let received = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        if (total) onProgress(received / total);
+    }
+    const merged = new Uint8Array(received);
+    let offset = 0;
+    for (const c of chunks) { merged.set(c, offset); offset += c.length; }
+    return merged;
+}
+
+// ── Blob-URL cache so FFmpeg core finds its own files ────
+const blobCache = {};
+async function preloadAsBlob(url, mime, onProgress) {
+    const bytes = await fetchWithProgress(url, onProgress);
+    const blob  = new Blob([bytes], { type: mime });
+    blobCache[url] = URL.createObjectURL(blob);
+    return blobCache[url];
+}
+
+// ── Try loading ffmpeg from one source (one CDN's set of 3 URLs) ──
+
+
+// ── Main loader — runs immediately on page open ──────────
+
+/* ═══════════════════════════════════════════════════
+   QUESTIONS
+═══════════════════════════════════════════════════ */
+const questions = [
+    "What were you trying to build today, and how long would it have taken you without this?",
+    "Walk me through what just happened — what did you actually see Thrilia do?",
+    "Would you tell a friend about this, and what would you say?"
+];
+
+/* ── BACKGROUND MUSIC ──
+   Set this to a direct, CORS-fetchable URL of your music track (mp3/wav/m4a).
+   Leave as '' to skip music entirely (export proceeds exactly as before).
+   The track is looped/trimmed to match the final video's exact length and
+   mixed UNDER the recorded voice (ducked, not replacing the interview audio). */
+const MUSIC_URL = (() => {
+    // Works when served by FastAPI; gracefully skips music if opened as file://
+    if (location.protocol === 'file:') return '';
+    return location.origin + '/static/m.mp3';
+})()
+const MUSIC_VOLUME = 0.18;            // 0–1, relative loudness of the music bed
+const VOICE_DUCK_VOLUME = 1.0;        // keep the recorded voice at full volume
+
+let currentQ = 0;
+let isRecording = false;
+let stream = null;
+let countdownInterval = null;
+let phase = 'idle';
+let rafId = null;
+let canvasEl, ctx, videoEl;
+let mainRecorder = null, mainChunks = [];
+let recordedBlob = null, recordedUrl = null, recordedFile = null;
+
+/* ── logo overlay timing ──
+   The actual transparent logo image is burned in server-side (main.py),
+   not drawn on the canvas. We just need to tell the server WHEN each
+   logo interstitial happened during the recording. recordingStartTime
+   anchors offsets to the moment mainRecorder.start() is called; each
+   logo interstitial appends {start, duration} (both in seconds,
+   start relative to the top of the recording) to logoMoments, which
+   gets sent to /upload alongside the video file. */
+let recordingStartTime = 0;
+let logoMoments = [];
+let nameTypeStart = 0; // performance.now() timestamp for when the "name" badge started typing
+
+/* ── bottom-overlay sequencer ──
+   One shared bottom slot cycles through:
+     question -> pose(empty) -> [logo | name] -> pose(empty) -> question -> ...
+   "logo" appears after Q1 and after the final question, "name" after Q2.
+
+   The Next button ONLY ever does one thing: ends the current question's
+   answer phase and starts the transition to whatever comes next. It plays
+   no role during the logo/name interstitial — those are fully automatic:
+   they appear, stay up for INTERSTITIAL_MS (4-5s), then advance on their
+   own (pose, then next question / finish) with no click required. */
+const POSE_MS         = 1700;   // 1s empty pose between blocks
+const INTERSTITIAL_MS = 4500;   // time the logo block stays up before auto-advancing
+const NAME_INTERSTITIAL_MS = 4000;   // time the name block stays up before auto-advancing
+let bottomMode = 'none';        // 'question' | 'logo' | 'name' | 'none'
+let bottomOutgoing = null;      // type still fading/sliding OUT (rendered until its animation finishes)
+let bottomTimer = null;         // single timeout handle driving the interstitial's auto-advance
+
+/* ── canvas slide animation ──
+   Slowed + smoothed per request: longer duration, gentler ease.
+   Two independent slots so an outgoing block can fade/slide down while
+   the incoming block simultaneously fades/slides up — a clean crossfade
+   rather than a jump cut. */
+const OVERLAY_SLIDE_MS = 800;           // was 380ms — now slower & smoother
+const overlaySlide = {
+    in:  { startTime: 0, active: false },
+    out: { startTime: 0, active: false }
+};
+
+function easeInOutSlide(t) {
+    // cosine ease-in-out — smooth acceleration AND deceleration,
+    // feels gentle/fluid rather than snappy.
+    return 0.5 - 0.5 * Math.cos(Math.PI * t);
+}
+
+const prefersReducedMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function triggerOverlaySlide(slot /* 'in' | 'out' */) {
+    if (prefersReducedMotion) { overlaySlide[slot].active = false; return; }
+    overlaySlide[slot].startTime = performance.now();
+    overlaySlide[slot].active = true;
+}
+/* Returns { dy, alpha, done }. slot: 'in' slides up+fades in; 'out' slides down+fades out. */
+function getOverlaySlideOffset(slot, blockHeight) {
+    const state = overlaySlide[slot];
+    if (!state || !state.active) return { dy: slot === 'out' ? 0 : 0, alpha: slot === 'out' ? 1 : 1, done: true };
+    const elapsed = performance.now() - state.startTime;
+    if (elapsed >= OVERLAY_SLIDE_MS) { state.active = false; return { dy: 0, alpha: slot === 'in' ? 1 : 0, done: true }; }
+    const t = easeInOutSlide(elapsed / OVERLAY_SLIDE_MS);
+    if (slot === 'in')  return { dy: (1 - t) * blockHeight * 1.25, alpha: t, done: false };
+    return { dy: t * blockHeight * 1.25, alpha: 1 - t, done: false };  // 'out'
+}
+
+/* ── voice (TTS) ── */
+let voiceEnabled = false;
+const speechSupported = 'speechSynthesis' in window;
+let availableVoices = [], selectedVoiceURI = null, currentUtterance = null;
+
+function initVoices() {
+    if (!speechSupported) return;
+    const populate = () => {
+        availableVoices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+        if (!availableVoices.length) availableVoices = window.speechSynthesis.getVoices();
+        const preferred =
+            availableVoices.find(v => v.name.includes('Microsoft Aria')) ||
+            availableVoices.find(v => v.name.includes('Google UK English Female')) ||
+            availableVoices[0];
+        if (preferred) selectedVoiceURI = preferred.voiceURI;
+    };
+    populate();
+    window.speechSynthesis.onvoiceschanged = populate;
+}
+function speakQuestion(text, onEnd) {
+    if (!speechSupported || !voiceEnabled) { onEnd && onEnd(); return; }
+    stopSpeaking();
+    const utter = new SpeechSynthesisUtterance(text);
+    const voice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+    if (voice) utter.voice = voice;
+    utter.rate = 0.9; utter.pitch = 1.05; utter.volume = 1.0;
+    utter.onend  = () => { currentUtterance = null; onEnd && onEnd(); };
+    utter.onerror = () => { currentUtterance = null; onEnd && onEnd(); };
+    currentUtterance = utter;
+    window.speechSynthesis.speak(utter);
+}
+function stopSpeaking() {
+    if (speechSupported && window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+    currentUtterance = null;
+}
+function estimateReadSeconds(text) {
+    return text.trim().split(/\s+/).length / 3.2;
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+async function init() {
+    const isMobileDevice = window.innerHeight > window.innerWidth;
+    const videoConstraints = isMobileDevice
+        ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+        : { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } };
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+            audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 48000 }
+        });
+    } catch (err) {
+        document.getElementById('ready-cam-status').textContent =
+            'Camera & microphone required. Please allow access and reload.';
+        return;
+    }
+    const readyPreview = document.getElementById('ready-camera-preview');
+    readyPreview.srcObject = stream;
+    await readyPreview.play().catch(() => {});
+    document.getElementById('ready-cam-status').textContent = 'Camera ready';
+    document.getElementById('btn-ready-start').disabled = false;
+}
+
+/* ═══════════════════════════════════════════════════
+   BEGIN INTERVIEW
+═══════════════════════════════════════════════════ */
+async function beginInterview() {
+    document.getElementById('ready-screen').style.display = 'none';
+    document.getElementById('interview-screen').style.display = 'flex';
+    document.getElementById('cam-placeholder').style.display = 'none';
+
+    videoEl = document.getElementById('preview-video');
+    videoEl.srcObject = stream;
+    await videoEl.play().catch(() => {});
+
+    canvasEl = document.getElementById('composite-canvas');
+    ctx = canvasEl.getContext('2d', { alpha: false });
+    initCanvasResolution();
+    window.addEventListener('resize', resizeCanvas);
+    drawLoop();
+
+    currentQ = 0;
+    const canvasStream = canvasEl.captureStream(30);
+    const audioTracks  = stream.getAudioTracks();
+    const recStream    = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+    const mime = getSupportedMimeType();
+    const recOptions = mime ? { mimeType: mime, videoBitsPerSecond: 8000000, audioBitsPerSecond: 128000 } : {};
+    mainChunks = [];
+    mainRecorder = new MediaRecorder(recStream, recOptions);
+    mainRecorder.ondataavailable = e => { if (e.data.size > 0) mainChunks.push(e.data); };
+    logoMoments = [];
+    recordingStartTime = performance.now();
+    mainRecorder.start(100);
+    loadQuestion(0);
+}
+
+/* ═══════════════════════════════════════════════════
+   CANVAS
+═══════════════════════════════════════════════════ */
+function initCanvasResolution() {
+    if (!canvasEl) return;
+    const videoTrack = stream && stream.getVideoTracks()[0];
+    const settings   = videoTrack ? videoTrack.getSettings() : {};
+    const camW = settings.width  || 1280;
+    const camH = settings.height || 720;
+    const isMobile = window.innerHeight > window.innerWidth;
+    let rW, rH;
+    if (isMobile) {
+        rW = Math.min(camW, camH);
+        rH = Math.max(camW, camH);
+        if (rH > 1280) { const s = 1280 / rH; rW = Math.round(rW * s); rH = 1280; }
+    } else {
+        rW = Math.min(camW, 1920);
+        rH = Math.round(rW * (9 / 16));
+        if (rH > camH) { rH = camH; rW = Math.round(rH * (16 / 9)); }
+    }
+    canvasEl.width = rW; canvasEl.height = rH;
+}
+function resizeCanvas() {
+    if (!canvasEl) return;
+    canvasEl.style.width = '100%'; canvasEl.style.height = '100%';
+}
+
+function drawLoop() {
+    if (!ctx) return;
+    const W = canvasEl.width, H = canvasEl.height;
+    const isPortrait = H > W;
+
+    if (videoEl && videoEl.readyState >= 2) {
+        ctx.setTransform(-1, 0, 0, 1, W, 0);
+        ctx.drawImage(videoEl, 0, 0, W, H);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        // All overlays live in ONE shared bottom-anchored screen position.
+        // We draw the OUTGOING block first (sliding down/fading out on the
+        // 'out' slot), then the CURRENT block (sliding up/fading in on the
+        // 'in' slot) — giving a smooth crossfade handoff between them.
+        function drawBottomBlock(type, slot) {
+            if (type === 'question' && questions[currentQ]) {
+                const margin   = Math.round(W * 0.035);
+                const fontSize = Math.max(22, Math.round(W * (isPortrait ? 0.062 : 0.034)));
+                const lineHeight = Math.round(fontSize * 1.32);
+                const padX  = Math.round(fontSize * 0.7);
+                const padTop = Math.round(fontSize * 0.55);
+                const maxLines = isPortrait ? 4 : 3;
+
+                ctx.font = `600 ${fontSize}px Inter, sans-serif`;
+                ctx.textBaseline = 'alphabetic';
+
+                let q = 'Q' + (currentQ + 1) + ': ' + questions[currentQ];
+                const maxWidth = W - margin * 2 - padX * 2;
+                const words = q.split(' ');
+                let line = '', lines = [];
+                for (const word of words) {
+                    const test = line + (line ? ' ' : '') + word;
+                    if (ctx.measureText(test).width > maxWidth) { lines.push(line); line = word; }
+                    else line = test;
+                }
+                if (line) lines.push(line);
+                const shownLines = lines.slice(0, maxLines);
+
+                const boxW = W - margin * 2;
+                const boxH = padTop * 2 + shownLines.length * lineHeight;
+                const boxY = H - margin - boxH;   // bottom-anchored
+                const sl = getOverlaySlideOffset(slot, boxH);
+
+                ctx.save();
+                ctx.globalAlpha = sl.alpha;
+                ctx.translate(0, sl.dy);
+                ctx.fillStyle = 'rgba(0,0,0,0.72)';
+                ctx.fillRect(margin, boxY, boxW, boxH);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `600 ${fontSize}px Inter, sans-serif`;
+                shownLines.forEach((l, i) => {
+                    ctx.fillText(l, margin + padX, boxY + padTop + fontSize + i * lineHeight);
+                });
+                ctx.restore();
+            }
+
+            // 'logo' interstitial is no longer drawn on the canvas — the
+            // server burns in the actual transparent logo image afterwards,
+            // at the timestamps recorded in logoMoments (see showInterstitial).
+
+            if (type === 'name') {
+                try {
+                    const uName    = localStorage.getItem('thrilia_user_name')    || '';
+                    const uCollege = localStorage.getItem('thrilia_user_college') || '';
+                    const uYear    = localStorage.getItem('thrilia_user_year')    || '';
+                    const uDept    = localStorage.getItem('thrilia_user_dept')    || '';
+                    if (uName) {
+                        const line2 = [uCollege, uYear, uDept].filter(Boolean).join(' ');
+
+                        // Self-adjusting sizing: base everything on the SHORTER of the two
+                        // canvas dimensions so it reads at a consistent relative size on
+                        // any phone aspect ratio (or landscape), not just one preset.
+                        const minDim      = Math.min(W, H);
+                        const nameFont    = Math.max(22, Math.round(minDim * 0.052));
+                        const subFont     = Math.max(13, Math.round(nameFont * 0.46));
+                        const nameLineH   = Math.round(nameFont * 1.05);
+                        const subLineH    = Math.round(subFont * 1.15);
+                        const underlineGap = Math.round(nameFont * 0.14);   // name baseline -> underline
+                        const underlineH   = Math.max(2, Math.round(nameFont * 0.06));
+                        const subGap       = Math.round(nameFont * 0.30);   // underline -> subtitle
+
+                        const marginX = Math.max(10, Math.round(W * 0.045));
+                        const marginY = Math.max(10, Math.round(H * 0.045));
+
+                        const nameFontStr = `700 ${nameFont}px Inter, sans-serif`;
+                        const subFontStr  = `400 ${subFont}px Inter, sans-serif`;
+
+                        ctx.font = nameFontStr;
+                        const fullNameWidth = ctx.measureText(uName).width;
+
+                        // Typewriter reveal of the name itself.
+                        const typingDuration = Math.min(1500, Math.max(450, uName.length * 55));
+                        const elapsed   = nameTypeStart ? performance.now() - nameTypeStart : 0;
+                        const revealCount = Math.max(0, Math.min(uName.length, Math.floor((elapsed / typingDuration) * uName.length)));
+                        const stillTyping = revealCount < uName.length;
+                        const shownName  = uName.slice(0, revealCount);
+                        const shownWidth = ctx.measureText(shownName).width;
+                        const cursorOn   = Math.floor(performance.now() / 450) % 2 === 0;
+
+                        // Teal underline grows in left-to-right right after typing finishes,
+                        // then the subtitle fades in once the underline is fully drawn.
+                        const ulElapsed  = nameTypeStart ? (performance.now() - nameTypeStart - typingDuration) : -9999;
+                        const ulProgress = stillTyping ? 0 : Math.max(0, Math.min(1, ulElapsed / 260));
+
+                        const blockH = nameLineH + underlineGap + underlineH + (line2 ? (subGap + subLineH) : 0);
+                        const sl = getOverlaySlideOffset(slot, blockH);
+                        const blockTop = H - marginY - blockH - Math.round(H * 0.12);
+
+                        const baseX = marginX;
+                        const nameBaselineY = blockTop + nameFont;
+                        const underlineY    = blockTop + nameLineH + underlineGap;
+                        const subBaselineY  = underlineY + underlineH + subGap + subFont;
+
+
+                        // Enter: slide in from the left. Exit: fade only, no slide.
+                        const slideX = slot === 'in'
+                            ? -(1 - sl.alpha) * (W * 0.25)   // enter from left
+                            : 0;
+                        const translateY = slot === 'in' ? sl.dy * 0.2 : 0;
+
+                        ctx.save();
+                        ctx.globalAlpha = sl.alpha;
+                        ctx.translate(slideX, translateY);
+                        ctx.textBaseline = 'alphabetic';
+
+                        // Name — bold white, with a soft shadow for legibility since this
+                        // design sits directly on the video with no background plate.
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0,0,0,0.55)';
+                        ctx.shadowBlur = Math.round(nameFont * 0.18);
+                        ctx.shadowOffsetY = Math.round(nameFont * 0.05);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = nameFontStr;
+                        ctx.fillText(shownName, baseX, nameBaselineY);
+                        if (stillTyping && cursorOn) {
+                            ctx.fillRect(baseX + shownWidth + 2, nameBaselineY - nameFont * 0.82, Math.max(2, nameFont * 0.06), nameFont * 0.92);
+                        }
+                        ctx.restore();
+
+                        // Teal underline, sized to the name's full width.
+                        if (!stillTyping && ulProgress > 0) {
+                            ctx.fillStyle = '#0d9488';
+                            ctx.fillRect(baseX, underlineY, Math.round(fullNameWidth * ulProgress), underlineH);
+                        }
+
+                        // Subtitle (institution), once the underline has finished growing.
+                        if (line2 && !stillTyping && ulProgress >= 1) {
+                            ctx.save();
+                            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                            ctx.shadowBlur = Math.round(subFont * 0.2);
+                            ctx.shadowOffsetY = Math.round(subFont * 0.05);
+                            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                            ctx.font = subFontStr;
+                            ctx.fillText(line2, baseX, subBaselineY);
+                            ctx.restore();
+                        }
+
+                        ctx.restore();
+                    }
+                } catch (e) {}
+            }
+        }
+
+        if (bottomOutgoing) {
+            const stillAnimating = overlaySlide.out.active;
+            if (stillAnimating) drawBottomBlock(bottomOutgoing, 'out');
+            else bottomOutgoing = null;
+        }
+        if (bottomMode !== 'none') drawBottomBlock(bottomMode, 'in');
+    } else {
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, W, H);
+    }
+    rafId = requestAnimationFrame(drawLoop);
+}
+
+/* ═══════════════════════════════════════════════════
+   QUESTION FLOW
+   Sequence: Q1 -> pose -> LOGO -> pose -> Q2 -> pose -> NAME -> pose -> Q3 -> pose -> LOGO
+═══════════════════════════════════════════════════ */
+
+// What interstitial (if any) plays AFTER finishing question index i (0-based).
+// i=0 (Q1 done) -> logo, i=1 (Q2 done) -> name, last question done -> logo.
+// Which interstitial (if any) plays after question qIndex's display/pose,
+// right before the user starts answering THAT SAME question.
+// q1(0) -> logo, q2(1) -> name, q3(2, last) -> logo.
+function interstitialAfter(qIndex) {
+    if (qIndex === 0) return 'logo';
+    if (qIndex === 1) return 'name';
+    if (qIndex === questions.length - 1) return 'logo';
+    return null;
+}
+
+function clearBottomTimer() {
+    if (bottomTimer) { clearTimeout(bottomTimer); bottomTimer = null; }
+}
+
+/* Switch the shared bottom slot to a new block type ('question'|'logo'|'name'|'none').
+   Whatever was showing before slides out (independent animation slot) while
+   the new block (if any) simultaneously slides in. */
+function setBottomMode(next) {
+    if (bottomMode !== 'none') {
+        bottomOutgoing = bottomMode;
+        triggerOverlaySlide('out');
+    } else {
+        bottomOutgoing = null;
+    }
+    bottomMode = next;
+    if (next !== 'none') {
+        triggerOverlaySlide('in');
+    }
+}
+
+/* Pose = bottom slot empty for POSE_MS, then runs `onDone`. */
+function showPose(onDone) {
+    clearBottomTimer();
+    setBottomMode('none');
+    bottomTimer = setTimeout(() => { bottomTimer = null; onDone && onDone(); }, POSE_MS);
+}
+
+/* Show an interstitial block (logo/name) for its own dwell time, then go
+   straight into the answer phase for the CURRENT question (no extra pose
+   here — pose only happens between question-display and interstitial).
+   Next becomes enabled the moment answering starts. Recording has been
+   running continuously since the question first appeared. */
+function showInterstitial(type) {
+    clearBottomTimer();
+    setBottomMode(type);
+    setPhaseChip(type === 'logo' ? 'THRILIA' : 'INTRODUCING');
+    setStatus('One moment…');
+
+    if (type === 'logo') {
+        logoMoments.push({
+            start: (performance.now() - recordingStartTime) / 1000,
+            duration: INTERSTITIAL_MS / 1000
+        });
+    }
+
+    if (type === 'name') {
+        nameTypeStart = performance.now();
+    }
+
+    const dwellMs = type === 'name' ? NAME_INTERSTITIAL_MS : INTERSTITIAL_MS;
+    bottomTimer = setTimeout(() => {
+        bottomTimer = null;
+        startAnswer();
+    }, dwellMs);
+}
+
+function loadQuestion(qIndex) {
+    currentQ = qIndex;
+    stopCountdown(); stopSpeaking(); setRecBtn(false);
+    clearBottomTimer();
+
+    const pct = (currentQ / questions.length) * 100;
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-text').textContent = `${currentQ} / ${questions.length}`;
+    document.getElementById('next-btn').disabled = true;
+    setStatus('Read the question above…');
+    setPhaseChip('LISTEN');
+
+    setBottomMode('question');
+
+    const readEstimate = estimateReadSeconds(questions[currentQ]);
+    const total = Math.min(5,readEstimate );     // ~5-6s including the read + brief pause
+    speakQuestion(questions[currentQ]);
+    startCountdown(total, () => {
+        stopSpeaking();
+        document.getElementById('countdown-overlay').style.display = 'none';
+        // Question display is done — pose, then the interstitial (logo/name)
+        // plays automatically. Next stays disabled through all of this.
+        showPose(() => {
+            const interstitial = interstitialAfter(currentQ);
+            if (interstitial) showInterstitial(interstitial);
+            else startAnswer(); // no interstitial slot for this question — go straight to answering
+        });
+    });
+}
+
+function startAnswer() {
+    stopCountdown(); stopSpeaking();
+    clearBottomTimer();
+    setBottomMode('none');   // slide the logo/name block away — bottom is empty while answering
+    document.getElementById('countdown-overlay').style.display = 'none';
+    setRecBtn(true); phase = 'recording'; setPhaseChip('ANSWERING');
+    document.getElementById('next-btn').disabled = false;
+    setStatus('Recording your answer… press Next → when done.');
+}
+function stopAnswer() { setRecBtn(false); phase = 'done'; setPhaseChip('RECORDED'); }
+function setRecBtn(val) {
+    isRecording = val;
+    const badge = document.getElementById('rec-badge');
+    if (badge) badge.classList.toggle('active', val);
+}
+
+/* ═══════════════════════════════════════════════════
+   NAVIGATION
+   Next is only ever active during the answer phase (after a question's
+   6s display + 1s pose + 4s logo/name interstitial have all played out).
+   Clicking it ends the current answer and immediately starts the next
+   question's display — there is no separate click for the interstitial;
+   it's baked into the ~11s the button stays disabled at the top of each cycle.
+═══════════════════════════════════════════════════ */
+function nextQuestion() {
+    const finishedQ = currentQ;
+    stopAnswer();
+    document.getElementById('next-btn').disabled = true;
+
+    const isLastQuestion = finishedQ >= questions.length - 1;
+    if (isLastQuestion) {
+        finishInterview();
+    } else {
+        loadQuestion(finishedQ + 1);
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   FINISH + TRANSCODE
+═══════════════════════════════════════════════════ */
+async function uploadAndProcess(blob) {
+
+    try {
+
+        setTcFill(10);
+        setTcMsg('Uploading interview...');
+
+        const file = new File(
+            [blob],
+            'interview.webm',
+            { type: blob.type || 'video/webm' }
+        );
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('logo_moments', JSON.stringify(logoMoments));
+
+        const uploadRes = await fetch('/upload', {
+            method: 'POST',
+            body: fd
+        });
+
+        if (!uploadRes.ok)
+            throw new Error('Upload failed');
+
+        const uploadData = await uploadRes.json();
+        const jobId = uploadData.job_id;
+
+        setTcFill(20);
+        setTcMsg('Starting render...');
+
+        const editRes = await fetch(`/auto-edit/${jobId}`, {
+            method: 'POST'
+        });
+
+        if (!editRes.ok)
+            throw new Error('Auto edit failed');
+
+        pollJob(jobId);
+
+    } catch (err) {
+
+        console.error(err);
+
+        setTcMsg('Upload failed');
+    }
+}
+
+async function finishInterview() {
+    stopCountdown();
+    stopSpeaking();
+
+    clearBottomTimer();
+    bottomMode = 'none';
+    bottomOutgoing = null;
+
+    if (isRecording) stopAnswer();
+
+    document.getElementById('interview-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'flex';
+
+    const playback = document.getElementById('actual-playback');
+    playback.style.display = 'none';
+
+    document.getElementById('transcode-status').style.display = 'block';
+    setTcFill(0);
+    setTcMsg('Preparing recording...');
+
+    if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+
+    if (mainRecorder && mainRecorder.state !== 'inactive') {
+
+        mainRecorder.onstop = async () => {
+
+            const mime = getSupportedMimeType() || 'video/webm';
+            const rawBlob = new Blob(mainChunks, { type: mime });
+
+            await uploadAndProcess(rawBlob);
+        };
+
+        mainRecorder.stop();
+
+    } else {
+
+        const mime = getSupportedMimeType() || 'video/webm';
+        const rawBlob = new Blob(mainChunks, { type: mime });
+
+        await uploadAndProcess(rawBlob);
+    }
+}
+
+async function pollJob(jobId) {
+
+    const playback = document.getElementById('actual-playback');
+
+    const interval = setInterval(async () => {
+
+        try {
+
+            const res = await fetch(`/status/${jobId}`);
+            const job = await res.json();
+
+            const pct = job.progress || 0;
+
+            setTcFill(pct);
+            setTcMsg(job.step || 'Processing...');
+
+            if (job.status === 'done') {
+
+                clearInterval(interval);
+
+                document.getElementById('transcode-status').style.display = 'none';
+
+                playback.src = `/preview-output/${jobId}`;
+                playback.style.display = 'block';
+
+                document.getElementById('final-download').style.display = 'block';
+
+                document.getElementById('dl-link').href =
+                    `/download/${jobId}`;
+
+                document.getElementById('dl-link').download =
+                    'thrilia-testimony.mp4';
+            }
+
+            if (
+                job.status === 'error' ||
+                job.status === 'render_error'
+            ) {
+
+                clearInterval(interval);
+
+                setTcMsg('Render failed');
+            }
+
+        } catch (e) {
+
+            console.error(e);
+        }
+
+    }, 2000);
+}
+
+/* ── convert to MP4 via ffmpeg.wasm, or fall back to webm ── */
+async function attemptMp4(rawBlob) {
+    // Show transcode panel
+    const tcPanel = document.getElementById('transcode-status');
+    tcPanel.style.display = 'block';
+    setTcMsg('Waiting for MP4 encoder…');
+    setTcFill(0);
+
+    // Wait up to 90 s for ffmpeg to finish loading (it was pre-fetching in background)
+    const deadline = Date.now() + 90000;
+    while (!ffmpegReady && !ffmpegFailed && Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 500));
+        // reflect pill bar in transcode panel too
+        if (!ffmpegReady) setTcFill(ffmpegLoadPct * 0.4); // 0-40% is "loading encoder"
+    }
+
+    if (ffmpegFailed || !ffmpegReady || !ffmpegInst) {
+        // Graceful fallback: offer the raw webm
+        tcPanel.style.display = 'none';
+        offerDownload(rawBlob, false);
+        return;
+    }
+
+    setTcMsg('Converting to MP4 (H.264)…');
+    setTcFill(40);
+
+    try {
+        const { fetchFile } = window.FFmpegWASM || window['@ffmpeg/ffmpeg'] || {};
+        // write input
+        const inputExt = rawBlob.type.includes('mp4') ? 'mp4' : 'webm';
+        const inputName  = `input.${inputExt}`;
+        const outputName = 'output.mp4';
+
+        await ffmpegInst.writeFile(inputName, await fetchFile(rawBlob));
+
+        setTcFill(45);
+
+        // ── Try to bring in background music, if configured ──
+        let musicName = null;
+        if (MUSIC_URL) {
+            try {
+                setTcMsg('Fetching background music…');
+                const musicBytes = await fetchFile(MUSIC_URL);
+                const musicExt = (MUSIC_URL.split('.').pop() || 'mp3').split('?')[0].toLowerCase();
+                musicName = `music.${['mp3','wav','m4a','aac','ogg'].includes(musicExt) ? musicExt : 'mp3'}`;
+                await ffmpegInst.writeFile(musicName, musicBytes);
+            } catch (musicErr) {
+                console.warn('[ffmpeg] music fetch failed, exporting without music:', musicErr);
+                musicName = null;
+            }
+        }
+
+        setTcMsg('Converting to MP4 (H.264)…');
+        setTcFill(50);
+
+        if (musicName) {
+            // Loop the track to cover the whole video, duck it under the
+            // recorded voice, mix the two audio streams, keep original video.
+            // '-shortest' on the output trims the looped music to the video's length.
+            await ffmpegInst.exec([
+                '-i', inputName,
+                '-stream_loop', '-1', '-i', musicName,
+                '-filter_complex',
+                    `[0:a]volume=${VOICE_DUCK_VOLUME}[voice];` +
+                    `[1:a]volume=${MUSIC_VOLUME}[music];` +
+                    `[voice][music]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
+                '-map', '0:v',
+                '-map', '[aout]',
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-crf', '23',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-shortest',
+                '-movflags', '+faststart',
+                outputName
+            ]);
+            await ffmpegInst.deleteFile(musicName).catch(() => {});
+        } else {
+            // No music — original behavior, just transcode to H.264/MP4.
+            await ffmpegInst.exec([
+                '-i', inputName,
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-crf', '23',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-movflags', '+faststart',
+                outputName
+            ]);
+        }
+
+        const data = await ffmpegInst.readFile(outputName);
+        const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
+
+        // clean up
+        await ffmpegInst.deleteFile(inputName).catch(() => {});
+        await ffmpegInst.deleteFile(outputName).catch(() => {});
+
+        tcPanel.style.display = 'none';
+        offerDownload(mp4Blob, true);
+    } catch (err) {
+        console.warn('[ffmpeg] transcode failed:', err);
+        tcPanel.style.display = 'none';
+        offerDownload(rawBlob, false);
+    }
+}
+
+function offerDownload(blob, isMp4) {
+    recordedBlob = blob;
+    recordedUrl  = URL.createObjectURL(blob);
+
+    // Try to create a shareable File object (kept for potential future use)
+    try {
+        const ext = isMp4 ? 'mp4' : 'webm';
+        recordedFile = new File([blob], `thrilia-testimony.${ext}`, { type: blob.type });
+    } catch (e) { recordedFile = null; }
+
+    const dlLink = document.getElementById('dl-link');
+    dlLink.href     = recordedUrl;
+    dlLink.download = isMp4 ? 'thrilia-testimony.mp4' : 'thrilia-testimony.webm';
+    dlLink.textContent = '⬇ Download Recording';
+
+    document.getElementById('results-title').textContent = 'Testimony Recorded';
+
+    // Update the pre-existing video element with the final output (MP4 + music)
+    const playback = document.getElementById('actual-playback');
+    if (playback) {
+        playback.src = recordedUrl;
+        playback.style.display = 'block';
+    }
+
+    document.getElementById('final-download').style.display = 'block';
+}
+
+/* ── UI helpers ── */
+function getSupportedMimeType() {
+    const types = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=h264,opus',
+        'video/webm',
+        'video/mp4;codecs=h264,aac',
+        'video/mp4'
+    ];
+    return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+function startCountdown(seconds, onDone) {
+    stopCountdown();
+    let rem = seconds;
+    const circ = 2 * Math.PI * 28;
+    const fill = document.getElementById('ring-fill');
+    fill.style.strokeDasharray = circ;
+    function tick() {
+        document.getElementById('countdown-num').textContent = Math.ceil(rem);
+        fill.style.strokeDashoffset = circ * (1 - rem / seconds);
+        if (rem <= 0) { stopCountdown(); onDone && onDone(); return; }
+        rem--;
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+}
+function stopCountdown() {
+    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+}
+function setPhaseChip(t)  { document.getElementById('phase-label').textContent = t; }
+function setStatus(t)     { document.getElementById('status-msg').textContent   = t; }
+function setTcMsg(t)      { const el = document.getElementById('tc-msg');  if (el) el.textContent = t; }
+function setTcFill(pct)   { const el = document.getElementById('tc-fill'); if (el) el.style.width = Math.round(pct) + '%'; }
+
+function restartApp() {
+    stopSpeaking();
+    clearBottomTimer();
+    currentQ = 0; phase = 'idle'; bottomMode = 'none'; bottomOutgoing = null;
+    mainChunks = []; mainRecorder = null;
+    recordedBlob = null; recordedUrl = null; recordedFile = null;
+
+    document.getElementById('results-screen').style.display   = 'none';
+    document.getElementById('ready-screen').style.display     = 'flex';
+    document.getElementById('transcode-status').style.display = 'none';
+    document.getElementById('final-download').style.display   = 'none';
+    const pb = document.getElementById('actual-playback');
+    if (pb) pb.remove();
+
+    if (stream && stream.active) {
+        const rp = document.getElementById('ready-camera-preview');
+        rp.srcObject = stream;
+        rp.play().catch(() => {});
+        document.getElementById('ready-cam-status').textContent  = 'Camera ready';
+        document.getElementById('btn-ready-start').disabled      = false;
+    } else {
+        document.getElementById('ready-cam-status').textContent = 'Requesting camera…';
+        document.getElementById('btn-ready-start').disabled = true;
+        init();
+    }
+}
+
+/* ── expose globals for onclick attributes ── */
+window.beginInterview  = beginInterview;
+window.nextQuestion    = nextQuestion;
+window.restartApp      = restartApp;
+
+/* ── BOOT ── */
+initVoices();
+document.getElementById('btn-ready-start').disabled = true;
+init();
+</script>
+</body>
+</html>
